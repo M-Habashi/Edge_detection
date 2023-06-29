@@ -1,8 +1,8 @@
 # 0.0 Imports
-# from utils.my_utils2 import *
-# from utils.visualize_utils import *
-# from utils.Knearest_utils import *
-# from settings import *
+from utils.my_utils2 import *
+from utils.visualize_utils import *
+from utils.Knearest_utils import *
+from settings import *
 from utils.data_utils import download_folder_contents
 
 import os
@@ -26,7 +26,7 @@ download_folder_contents('215050229179', os.path.join(ROOT_DIR, 'data'))
 
 # 0.1 Folders and paths
 # TODO:
-import models.model8.model as m
+import data.models.model8.model as m
 
 model_folder = m.get_model_folder()
 exp = 'exp_00'

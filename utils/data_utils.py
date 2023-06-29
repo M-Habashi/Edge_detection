@@ -1,7 +1,6 @@
 import os
 import requests
 from boxsdk import OAuth2, Client
-from tqdm import tqdm
 
 # Box API credentials
 CLIENT_ID = "6ndnryupe5qjah7y6tv0ydt35pz55ouw"
@@ -58,7 +57,7 @@ def download_folder_contents(folder_id, destination_path, count=None, client=Non
             with open(file_path, 'wb') as file:
                 file.write(item.content())
                 count += 1
-                print(f"Downloading ---[{count}/{total}]---", end="\r", flush=True)
+                print(f"\rDownloading ---[{count}/{total}]---", flush=True, end="")
 
         elif item.type == 'folder':
             subfolder_path = os.path.join(destination_path, item.name)

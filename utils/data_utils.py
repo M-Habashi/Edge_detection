@@ -5,7 +5,7 @@ from boxsdk import OAuth2, Client
 # Box API credentials
 CLIENT_ID = "6ndnryupe5qjah7y6tv0ydt35pz55ouw"
 CLIENT_SECRET = "E6dYlLzVPu1pKzOJXNC7jsEoiq4OEvV5"
-ACCESS_TOKEN = "94yKk2rrIfVTuv4gMVA0elY6sSGTTMeh"
+ACCESS_TOKEN = "hu5liWePR1p2u9OJS7D0XXfrMA85OpwS"
 
 # Local data folder
 DATA_FOLDER = "data"
@@ -57,7 +57,7 @@ def download_folder_contents(folder_id, destination_path, count=None, client=Non
             with open(file_path, 'wb') as file:
                 file.write(item.content())
                 count += 1
-                print(f"\rDownloading ---[{count}/{total}]---", flush=True, end="")
+                print(f"\rDownloading ---[{count}/{total}]---", end="", flush=True)
 
         elif item.type == 'folder':
             subfolder_path = os.path.join(destination_path, item.name)

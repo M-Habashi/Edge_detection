@@ -44,7 +44,7 @@ batch_size = 5000
 eval_epoch = 5  # evaluation every # epochs
 
 net = m.mh_Net()
-num_epochs = 1
+num_epochs = 20
 learning_rate = 0.001
 
 # 1.3 sampling and converting to dataloaders

@@ -50,9 +50,9 @@ learning_rate = 0.001
 # 1.3 sampling and converting to dataloaders
 
 ignore_pickable=True
-tr_dataset = m.pc_labeled_dataset(tr_cashe_path, r'data/pc_labeled/train/', 20, ignore_pickable=ignore_pickable)
-val_dataset = m.pc_labeled_dataset(val_cashe_path, r'data/New folder/val', 20, ignore_pickable=ignore_pickable)
-ts_dataset = m.pc_labeled_dataset(val_cashe_path, r'data/New folder/train/', 20, ignore_pickable=ignore_pickable)
+tr_dataset = m.pc_labeled_dataset(tr_cashe_path, r'data/train/', 20, ignore_pickable=ignore_pickable)
+val_dataset = m.pc_labeled_dataset(val_cashe_path, r'data/val', 20, ignore_pickable=ignore_pickable)
+ts_dataset = m.pc_labeled_dataset(val_cashe_path, r'data/train/', 20, ignore_pickable=ignore_pickable)
 
 loader_tr = DataLoader(tr_dataset, batch_size=batch_size, shuffle=True)
 loader_val = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)

@@ -51,6 +51,7 @@ learning_rate = 0.001
 
 # 1.3 sampling and converting to dataloaders
 
+
 ignore_pickable = True
 tr_dataset = m.pc_labeled_dataset_by_folder(model_folder,  r'data/train', features_fname, rand_angle=20, n_rotations=2, sample_index=10, points_by_pc=8000)
 val_dataset = m.pc_labeled_dataset_by_folder(model_folder, r'data/val', features_fname)

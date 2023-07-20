@@ -3,6 +3,7 @@ import torch
 from sklearn import linear_model
 from tqdm import tqdm
 
+
 def shuffle_array(array):
     array = np.array(array)
     indices = np.random.permutation(len(array))
@@ -24,7 +25,6 @@ def stratified_sampling(arr, num):
 
 
 def uniform_sampling(arr, num):
-
     unique_arr = np.unique(arr)
 
     # get an array with sorted unique classes based on frequency
@@ -70,12 +70,14 @@ def mh_divide(inputs, labels, r_tr, r_val):
 
     return input_tr, labels_tr, input_val, labels_val, input_ts, labels_ts
 
-def get_even_spaced_indices(arr, n):
-    idx = torch.round(torch.linspace(0, len(arr)-1, n)).to(torch.int64)  # Generating sampled indices
-    return idx.cpu()
 
-#----------------------------------------------------------------------------------#
-#delete or move
+def get_even_spaced_indices(arr, n):
+    idx = torch.round(torch.linspace(0, len(arr) - 1, n)).to(torch.int64)  # Generating sampled indices
+    return idx.cpu().numpy()
+
+
+# ----------------------------------------------------------------------------------#
+# delete or move
 def get_prop_by_ratio_of_classes(pc, labels, k):
     def prop(x):
         return (x * (1 - x) * 4) ** 0.2
@@ -194,5 +196,3 @@ def sample_point_cloud(pc, labels, n_output, k_ratio=0.01, outlier_threshold=0.5
     labels = labels[idx_sampled]
 
     return pc, labels
-
-

@@ -1,0 +1,22 @@
+# Python specific
+*.pyc
+*.pyo
+__pycache__/
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+data/
+venv/
+utils/__pycache__/
+.env/
+.idea/
+
+
+# Miscellaneous
+*.swp
+*.log
+.idea/  # Exclude the .idea directory

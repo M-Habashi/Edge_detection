@@ -39,7 +39,7 @@ labels_dict = {i: load_labels(labels_files[i], classes, pc_dict[i].shape[0]) for
 
 # 2. Loading model and inference
 print("Loading mh_Net")
-net = m.mh_Net()
+net = m.mh_Net_out()
 net.load_state_dict(torch.load(weight_path))
 net.to(device)
 net.eval()
@@ -54,7 +54,7 @@ for k in tqdm(range(250, 290)):
 
     # 2. Inference
     print("Testing mh_Net")
-    pc = m.pc_normalize(pc)
+    # pc = m.pc_normalize(pc)
     # output_logts = m.mh_model(exp, pc, title)
     output_logts = m.mh_model(exp, pc)
     pred = output_logts.argmax(1)

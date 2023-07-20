@@ -1,4 +1,5 @@
 import inspect
+from utils import *
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,8 @@ import json
 from tabulate import tabulate
 import humanize
 import gc
+import sys
+from pympler import asizeof
 
 from matplotlib.colors import LinearSegmentedColormap
 from sklearn.metrics import confusion_matrix
@@ -29,6 +32,16 @@ def create_directory(path):
     else:
         shutil.rmtree(path)  # Removes all the subdirectories!
         os.makedirs(path)
+
+
+def check_and_create_directory(path):
+    # Creates a directory and replaces it if existing
+    if not os.path.exists(path):
+        os.makedirs(path)
+        out = 0
+    else:
+        out = 1
+    return out
 
 
 def get_files_in_folder(folder_path, ext, ROOT_DIR):
@@ -109,8 +122,18 @@ def show_nearest_neighbours(pc, i_point, k):
     visualize_labels(pc, k_label, title=f"k={300}")
     return k_label
 
-def show_nearest_neighbours_faiss(pc, i_point, k):
+def show_nearest_neighbours_evenly(pc, i_point, k, n):
+    k_label = np.zeros(pc.shape[0])
+    distances = np.linalg.norm(pc - pc[i_point], axis=1)
+    nearest_indices = np.argsort(distances)[:k]
+    nearest_indices = nearest_indices[get_even_spaced_indices(nearest_indices, n)]
+    k_label[nearest_indices] = 1
 
+    visualize_labels(pc, k_label, title=f"k={300}")
+    return k_label
+
+
+def show_nearest_neighbours_faiss(pc, i_point, k):
     k_label = np.zeros(pc.shape[0])
 
     faiss_index = faiss.GpuIndexFlatL2(faiss.StandardGpuResources(), pc.shape[1])
@@ -120,6 +143,7 @@ def show_nearest_neighbours_faiss(pc, i_point, k):
     k_label[nearest_indices] = 1
     visualize_labels(pc, k_label, title=f"k={300}")
     return k_label
+
 
 def visualize_labels(point_cloud, labels, title='Untitled', s=0.1, a=1, v_labels=None, v_colors=None, fig=None,
                      ax=None, legends=None):
@@ -314,6 +338,38 @@ def print_allocated_tensors():
     # Print the table
     table_str = tabulate(table, headers=headers, tablefmt="orgtbl")
     print(table_str)
+
+
+def get_variable_size(variable):
+    size = sys.getsizeof(variable)
+    size_humanized = humanize.naturalsize(size)
+    print(size_humanized)
+
+
+def largest_10_vars():
+    def sizeof_fmt(num, suffix='B'):
+        for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+            if abs(num) < 1024.0:
+                return "%3.1f %s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f %s%s" % (num, 'Yi', suffix)
+
+    for name, size in sorted(((name, asizeof.asizeof(value)) for name, value in list(
+            locals().items())), key=lambda x: -x[1])[:10]:
+        print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
+
+
+def div(dict, i):  # dictionary first value
+    return dict[list(dict.keys())[i]]
+
+
+def align_dict_order(dict1, dict2):
+    sorted_keys = sorted(list(dict1.keys()))
+    dict1_sorted, dict2_sorted = {}, {}
+    for key in sorted_keys:
+        dict1_sorted[key] = dict1[key]
+        dict2_sorted[key] = dict2[key]
+    return dict1_sorted, dict2_sorted
 
 
 print()

@@ -22,15 +22,11 @@ print("\n")
 
 # 0.1 Folders and paths
 classes = {'InnerEdge': 1, 'Outlier': 2, 'Pickable': 3}
-folder = r'data/pc_labeled/train/'
-k=0
+folder = r'data/val/'
+k = 0
 
-import models.model8.model as m
+import data.models.model11BO.model as m
 model_folder = m.get_model_folder()
-exp = 'exp_00'
-
-weight_path = model_folder + r'checkpoints/' + exp
-metrics_path = weight_path + "_pkl.pickle"
 
 # 1. Loading Data
 
@@ -46,21 +42,19 @@ for i, pc_file in enumerate(pc_files):
         else torch.zeros(pc_dict[title].shape[0])
 
 # 2. Loading model and inference
-print("Loading mh_Net")
-net = m.mh_Net()
-net.load_state_dict(torch.load(weight_path))
-net.to(device)
-net.eval()
 
-for k in range(len(pc_files)):
+for k in tqdm(range(len(pc_files)-7)):
     title = pc_files[k].split("/")[-1].split('.')[0]
     pc = torch.tensor(pc_dict[title]).to(device)
-    labels = torch.tensor(labels_dict[title]).to(device)
+    labels = m.adjust_labels_no_pickable(torch.tensor(labels_dict[title]).to(device))
 
     # 2. Inference
     print("Testing mh_Net")
-    output_logts = m.mh_model(exp, pc)
-    pred = output_logts.argmax(1)
+    pred, idx = m.mh_model_pc('exp_06', pc)
+    # pred, idx = m.mh_model_pc_hirerchial('exp_02','exp_edge_00', pc)
+    pc = pc[idx]
+    labels = labels[idx]
+
     acc = torch.mean((pred == labels).to(torch.float32))
     iou = m.compute_miou(labels.to(torch.int64), pred.to(torch.int64), 3)
     print(f"{title} : {iou}")
@@ -79,10 +73,6 @@ for k in range(len(pc_files)):
                      v_labels=pred.cpu().numpy())
 
     fig.suptitle(f"{k}: {title}")
-
-    # visualize_labels(pc[edge_idx].cpu().numpy(), pred[edge_idx].cpu().numpy(),
-    #                  fig=None, ax=None, title=f"Sampled points: {len(edge_idx)} points", legends=legends, v_colors=colors,
-    #                  v_labels=pred.cpu().numpy())
 
 
 plt.show(block=False)

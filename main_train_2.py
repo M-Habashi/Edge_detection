@@ -28,10 +28,20 @@ download_folder_contents('215050229179', os.path.join(ROOT_DIR, 'data'))
 
 # 0.1 Folders and paths
 # TODO:
-import data.models.model11BO.model as m
 
+# outliers model
+import data.models.model11.model as m
+exp_out = 'exp_02'
 model_folder = m.get_model_folder()
-exp = 'exp_61'
+weight_path = model_folder + r'checkpoints/' + exp_out
+net_out = m.mh_Net_out()
+net_out.load_state_dict(torch.load(weight_path))
+net_out.to(device)
+net_out.eval()
+
+
+# EDge detection model
+exp = 'exp_edge_00'
 features_fname = "D00"
 tr_cashe_path = model_folder + r'tr_features_' + features_fname + '.pkl'
 val_cashe_path = model_folder + r'val_features_' + features_fname + '.pkl'
@@ -41,19 +51,18 @@ metrics_path = weight_path + "_pkl.pickle"
 
 # 1. Loading Data
 
-
 batch_size = 1  # right noe can't be changed
-eval_epoch = 2  # evaluation every # epochs
+eval_epoch = 5  # evaluation every # epochs
 
-net = m.mh_Net_3()
-num_epochs = 20
-learning_rate = 0.001
+net = m.mh_Net_Edge()
+num_epochs = 1
+learning_rate = 0.0001
 
 # 1.3 sampling and converting to dataloaders
 
 ignore_pickable = True
 tr_dataset = m.pc_labeled_dataset_by_folder(model_folder,  r'data/train', features_fname, rand_angle=20, n_rotations=2, sample_index=10, points_by_pc=8000)
-val_dataset = m.pc_labeled_dataset_by_folder(model_folder, r'data/val', features_fname)
+val_dataset = m.pc_labeled_dataset_by_folder(model_folder, r'data/val', features_fname, points_by_pc=8000)
 ts_dataset = m.pc_labeled_dataset_by_folder(model_folder, r'data/val', features_fname)
 
 loader_tr = DataLoader(tr_dataset, batch_size=1, shuffle=True)
@@ -93,12 +102,18 @@ for epoch in range(num_epochs):
     epoch_loss = 0
     n_losses = 0
     for batch, (inputs, targets, pc) in enumerate(loader_tr):
-        inputs, targets = inputs.to(device), targets.squeeze().to(device)
+        inputs, targets, pc = inputs.to(device), targets.squeeze().to(device), pc.squeeze().to(device)
         inputs = inputs.squeeze(0)  #special input squeeze as it is batched already
         print(f"\r---[{batch + ((epoch - 1) % eval_epoch) * len(loader_tr) + 1}/{eval_epoch * len(loader_tr)}]---   ",
               end='', flush=True)
 
+        # Remove outliers
+        output_logts = net_out(inputs)
+        pred_inlier_idx = torch.where(output_logts.argmax(1) == 0)[0]
+        pc, inputs, targets = pc[pred_inlier_idx], inputs[pred_inlier_idx], targets[pred_inlier_idx]
         targets = net.adjust_labels(targets)
+        # visualize_labels(pc, targets)
+
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = model_loss.get_loss(outputs, targets)
@@ -114,8 +129,7 @@ for epoch in range(num_epochs):
         train_losses.append(epoch_loss.item())
         # Validation phase
         net.eval()
-        val_loss, val_ac, miou, iou, _ = m.evaluate_model(net, model_loss, loader_val, n_classes)
-
+        val_loss, val_ac, miou, iou = m.evaluate_model(net, model_loss, loader_val, n_classes)
         val_losses.append(val_loss)
         val_acc.append(val_ac)
 
@@ -131,11 +145,11 @@ for epoch in range(num_epochs):
         print(f"Elapsed time: {t1}")
 
         # Check if the current model has the best validation loss so far, and save it if it does
-        metric = miou
+        metric = - val_loss
         if metric > best_metric:
             best_metric = metric
             torch.save(net.state_dict(), weight_path)
-            print("***********************Saving Model***********************")
+            print("***Saving Model***")
 
 # 3. Plotting Metrics
 plt.figure()
@@ -149,15 +163,13 @@ plt.grid(True)
 plt.show(block=False)
 
 print('------------------------------------------')
-net.load_state_dict(torch.load(weight_path))
-test_loss, test_ac, miou_test, iou_test, c_matrix_test = m.evaluate_model(net, model_loss, loader_ts, n_classes)
+test_loss, test_ac, miou_test, _ = m.evaluate_model(net, model_loss, loader_ts, n_classes)
 print(f"Testing acc: {test_ac:.5f}, Testing loss: {test_loss:.5f},  mIoU={miou_test}")
 
 plt.show(block=False)
 print('Finished Training')
 
 # confusion matrix for testing
-
 output = None
 target = None
 with torch.no_grad():
@@ -173,6 +185,6 @@ y_pred = output.argmax(1).detach().cpu().numpy()
 y_true = target.cpu().numpy()
 my_hist(y_pred)
 
-plot_confusion_matrix_percent(y_true, y_pred, ['normal', 'outlier'])
+plot_confusion_matrix_percent(y_true, y_pred, ['flat', 'edge'])
 
 print("debug")
